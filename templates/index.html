@@ -1,10 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Test application</title>
+    <meta charset="UTF-8">
+    <title>StudyShed – Multi-Function UI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <p>This is the test website for the project learning about flasks appliction process</p>
-
+    <div class="app-container">
+        <button class="toggle-btn" id="openSidebarBtn" onclick="openSidebar()" title="Open menu">&#9776;</button>
+        <nav class="sidebar" id="sidebar">
+            <button class="close-btn" onclick="closeSidebar()" title="Close menu">&times;</button>
+            <div class="menu" id="menu">
+                {% for item in menu_items %}
+                  <button onclick="setActive('{{ item.key }}')" id="menu-{{ item.key }}">{{ item.label }}</button>
+                {% endfor %}
+            </div>
+        </nav>
+        <div class="content-area">
+            <header class="title-bar" id="titleBar">
+                Chat
+            </header>
+            <main class="main-content" id="mainContent">
+                <!-- Content changes dynamically via JS -->
+            </main>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
