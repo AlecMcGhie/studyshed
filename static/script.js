@@ -31,6 +31,9 @@ function setActive(feature) {
         default:
             document.getElementById('mainContent').innerHTML = "<p>Feature coming soon.</p>";
     }
+
+    // Automatically close the sidebar after a choice is made
+    closeSidebar()
 }
 
 function loadChatUI() {
