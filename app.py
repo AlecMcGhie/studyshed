@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
@@ -13,6 +13,14 @@ MENU_ITEMS = [
 @app.route('/')
 def home():
     return render_template('index.html', menu_items = MENU_ITEMS)
+
+@app.route('/api/chat', methods = ["POST"])
+def api_chat():
+    data = request.get_json()
+    msg = data.get("message", "")
+    # Echo the message the user says
+    response = f"You said: {msg}"
+    return jsonify({"reply": response})
 
 if __name__ == '__main__':
     app.run(debug=True)
