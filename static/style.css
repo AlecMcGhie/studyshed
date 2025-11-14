@@ -131,6 +131,7 @@ body {
     margin-bottom: 5px;
     border-radius: 6px;
 }
+
 .chat-msg.user {
     background: #e3eaf7;
     color: #243c4a;
