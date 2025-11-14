@@ -1,0 +1,136 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f7f8fa;
+    margin: 0;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    position: relative;
+}
+
+.sidebar {
+    background: #283C5C;
+    color: white;
+    width: 220px;
+    max-width: 220px;
+    padding-top: 0;
+    transition: transform 0.2s, width 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-220px);
+    z-index: 1000;
+}
+.sidebar.visible {
+    transform: translateX(0);
+}
+
+.toggle-btn {
+    background: #4A90E2;
+    border: none;
+    color: white;
+    font-size: 2em;
+    padding: 16px;
+    cursor: pointer;
+    position: fixed;
+    left: 0;
+    top: 30px;
+    border-radius: 0 6px 6px 0;
+    box-shadow: 0 0 8px rgba(0,0,0,0.15);
+    z-index: 1100;
+    transition: background 0.2s;
+}
+.hide-toggle-btn {
+    display: none !important;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    margin-top: 40px;
+}
+.menu button {
+    background: none;
+    border: none;
+    color: inherit;
+    text-align: left;
+    padding: 1em 1.2em;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.menu button.active,
+.menu button:hover {
+    background: #4565A0;
+}
+
+.sidebar .close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2em;
+    align-self: flex-end;
+    margin: 10px 10px 0 0;
+    cursor: pointer;
+}
+
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100vw;
+}
+
+.title-bar {
+    background: #4A90E2;
+    color: white;
+    padding: 1.2em 2em;
+    font-size: 1.7em;
+    font-weight: 600;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.main-content {
+    padding: 2em;
+}
+
+#chatBox {
+    max-width:500px;
+    margin:20px auto;
+    padding:20px;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 1px 8px rgba(100,139,181,0.11);
+}
+#chatMessages {
+    min-height:180px;
+    margin-bottom:16px;
+    max-height:240px;
+    overflow-y:auto;
+    background: #f4f7fc;
+    border-radius: 7px;
+    padding: 8px;
+    font-size: 1em;
+}
+.chat-msg {
+    padding: 7px;
+    margin-bottom: 5px;
+    background: #e3eaf7;
+    border-radius: 6px;
+}
+
+@media (max-width: 700px) {
+    .sidebar { width: 140px; max-width: 140px; }
+    .title-bar { font-size: 1.1em; padding: 1em 1em;}
+}
