@@ -114,6 +114,8 @@ body {
     box-shadow:0 1px 8px rgba(100,139,181,0.11);
 }
 #chatMessages {
+    display: flex;
+    flex-direction: column;
     min-height:180px;
     margin-bottom:16px;
     max-height:240px;
@@ -123,6 +125,7 @@ body {
     padding: 8px;
     font-size: 1em;
 }
+
 .chat-msg {
     padding: 7px;
     margin-bottom: 5px;
@@ -133,17 +136,17 @@ body {
     color: #243c4a;
     text-align: right;
     border-radius: 7px 7px 7px 1px;
-    margin-right: auto;
+    align-self: flex-end;
     margin-bottom: 7px;
     max-width: 85%;
   }
-  
+
   .chat-msg.bot {
     background: #fbe4d5;
     color: #865600;
     text-align: left;
     border-radius: 7px 7px 1px 7px;
-    margin-left: auto;
+    align-self: flex-start;
     margin-bottom: 7px;
     max-width: 85%;
   }
