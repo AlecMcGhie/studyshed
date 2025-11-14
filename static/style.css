@@ -126,10 +126,28 @@ body {
 .chat-msg {
     padding: 7px;
     margin-bottom: 5px;
-    background: #e3eaf7;
     border-radius: 6px;
 }
-
+.chat-msg.user {
+    background: #e3eaf7;
+    color: #243c4a;
+    text-align: left;
+    border-radius: 7px 7px 7px 1px;
+    margin-right: auto;
+    margin-bottom: 7px;
+    max-width: 85%;
+  }
+  
+  .chat-msg.bot {
+    background: #fbe4d5;
+    color: #865600;
+    text-align: right;
+    border-radius: 7px 7px 1px 7px;
+    margin-left: auto;
+    margin-bottom: 7px;
+    max-width: 85%;
+  }
+  
 @media (max-width: 700px) {
     .sidebar { width: 140px; max-width: 140px; }
     .title-bar { font-size: 1.1em; padding: 1em 1em;}
