@@ -77,11 +77,32 @@ function sendMessage(e) {
     var input = document.getElementById('chatInput');
     var messages = document.getElementById('chatMessages');
     if (!input || !messages) return;
-    if (input.value.trim() === '') return;
+    var text = input.value.trim();
+    if (text === '') return;
+
+    // Display user's message
     var msgDiv = document.createElement('div');
-    msgDiv.textContent = input.value;
+    msgDiv.textContent = text;
     msgDiv.className = 'chat-msg';
     messages.appendChild(msgDiv);
+
+    // POST to backend (Flask endpoint)
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text})
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        // Display server reply
+        var replyDiv = document.createElement('div');
+        replyDiv.textContent = data.reply;
+        replyDiv.className = 'chat-msg';
+        replyDiv.style.background = '#fbe4d5';  // visually distinct from user msg
+        messages.appendChild(replyDiv);
+        messages.scrollTop = messages.scrollHeight;
+    });
+
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
 }
