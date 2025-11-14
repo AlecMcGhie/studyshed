@@ -131,7 +131,7 @@ body {
 .chat-msg.user {
     background: #e3eaf7;
     color: #243c4a;
-    text-align: left;
+    text-align: right;
     border-radius: 7px 7px 7px 1px;
     margin-right: auto;
     margin-bottom: 7px;
@@ -141,7 +141,7 @@ body {
   .chat-msg.bot {
     background: #fbe4d5;
     color: #865600;
-    text-align: right;
+    text-align: left;
     border-radius: 7px 7px 1px 7px;
     margin-left: auto;
     margin-bottom: 7px;

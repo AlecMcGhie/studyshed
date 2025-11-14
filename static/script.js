@@ -80,10 +80,10 @@ function sendMessage(e) {
     var text = input.value.trim();
     if (text === '') return;
 
-    // Display user's message
+    // USER message right
     var msgDiv = document.createElement('div');
     msgDiv.textContent = text;
-    msgDiv.className = 'chat-msg';
+    msgDiv.className = 'chat-msg user';
     messages.appendChild(msgDiv);
 
     // POST to backend (Flask endpoint)
@@ -94,11 +94,10 @@ function sendMessage(e) {
     })
     .then(resp => resp.json())
     .then(data => {
-        // Display server reply
+        // BOT/SERVER reply (left)
         var replyDiv = document.createElement('div');
         replyDiv.textContent = data.reply;
-        replyDiv.className = 'chat-msg';
-        replyDiv.style.background = '#fbe4d5';  // visually distinct from user msg
+        replyDiv.className = 'chat-msg bot';
         messages.appendChild(replyDiv);
         messages.scrollTop = messages.scrollHeight;
     });
