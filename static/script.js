@@ -42,7 +42,7 @@ function loadChatUI() {
         <div id="chatBox">
             <div id="chatMessages"></div>
             <form id="chatForm" onsubmit="sendMessage(event)" style="display:flex;gap:8px;">
-                <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
+                <input id="chatInput" type="text" placeholder="Ask your question..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
                 <button type="submit" style="padding:9px 22px;background:#4A90E2;border:none;color:white;border-radius:6px;font-size:1em;">Send</button>
             </form>
         </div>
