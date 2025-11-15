@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-import ollama
+#import ollama
 
 app = Flask(__name__)
 
@@ -22,7 +22,9 @@ def api_chat():
     if msg:
         try:
             # Try to get a message to generate from ollama
-            response = ollama.generate(msg)
+            # Commenting out for offline use without library
+            #response = ollama.generate(msg)
+            response = "Ollama loop test"
             return jsonify({"reply": response})
         except Exception as e:
             return jsonify({"reply": str(e)})
