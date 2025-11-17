@@ -180,5 +180,6 @@ function sendMessage(e) {
 window.onload = function() {
     document.getElementById('sidebar').classList.remove('visible');
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
-    setActive('chat');
+    // Set the initial landing page 
+    setActive('modelhub');
 };
