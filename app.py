@@ -42,6 +42,33 @@ def api_chat():
     else:
         return Response(json.dumps({"error": "No message provided"}), mimetype='application/json')
     
+@app.route('/api/models')
+def api_models():
+    try:
+        response = ollama.list()  # This returns a ListResponse object
+        print("Ollama list() output:", response, type(response))
+        models_list = response.models  # <- This is the list of Model objects
+
+        model_details = []
+        for m in models_list:
+            name = m.model
+            model_details.append({
+                'name': name,
+                'active': name == active_model,
+                'size': m.size,
+                'digest': m.digest,
+                'modified_at': str(m.modified_at),
+                'family': getattr(m.details, 'family', ''),
+                'parameter_size': getattr(m.details, 'parameter_size', ''),
+                'quantization_level': getattr(m.details, 'quantization_level', ''),
+            })
+        return jsonify({'models': model_details, 'port': 11434})
+    except Exception as e:
+        print("API error:", e)
+        return jsonify({'error': str(e)}), 500
+
+
+
     
 if __name__ == '__main__':
     app.run(debug=True)

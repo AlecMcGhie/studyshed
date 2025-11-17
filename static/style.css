@@ -152,6 +152,12 @@ body {
     margin-bottom: 7px;
     max-width: 85%;
   }
+
+  .model-card.active-model {
+    border: 2px solid #4A90E2;
+    box-shadow: 0 0 10px #4A90E240;
+   }
+
   
 @media (max-width: 700px) {
     .sidebar { width: 140px; max-width: 140px; }

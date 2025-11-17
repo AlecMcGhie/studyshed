@@ -70,8 +70,31 @@ function loadCalendarUI() {
 
 function loadModelHubUI() {
     document.getElementById('titleBar').innerText = "Model Hub";
-    document.getElementById('mainContent').innerHTML = "<p>Model Hub feature coming soon.</p>";
+    document.getElementById('mainContent').innerHTML = `<div id="modelList" class="model-hub-grid"></div>`;
+
+    fetch('/api/models')
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('modelList').innerHTML = `<p style="color:red;">${data.error}</p>`;
+            return;
+        }
+        document.getElementById('modelList').innerHTML = data.models.map(model => `
+            <div class="model-card${model.active ? ' active-model' : ''}">
+                <div class="model-name">${model.name}</div>
+                <div class="model-version">${model.description || ''}</div>
+                <div class="model-license">${model.license || ''}</div>
+                <div class="model-size">Size: ${(model.size / 1e6).toFixed(1)} MB</div>
+                <div class="model-actions">
+                    ${model.active ? '<span style="color:green;font-weight:bold;">Active</span>'
+                                   : '<button class="model-btn activate">Activate</button>'}
+                </div>
+            </div>
+        `).join('');
+    });
 }
+
+
 
 function bindChatHandler() {
     var form = document.getElementById('chatForm');
