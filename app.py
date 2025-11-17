@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import ollama
+import json
 
 app = Flask(__name__)
 
@@ -23,14 +24,22 @@ def api_chat():
     msg = data.get("message", "")
     if msg:
         try:
-            # Try to get a message to generate from ollama
-            response = ollama.generate(model= active_model, prompt = msg)
-            message_text = response['response']
-            return jsonify({"reply": message_text})
+            messages = [
+                {"role": "user", "content":msg}
+            ]        
+            # Streaming the output
+            stream = ollama.chat(model = active_model, messages = messages, stream = True)
+
+            def generate():
+                for chunk in stream:
+                    yield json.dumps({"reply": chunk["message"]["content"]}) + "\n"
+
+            return Response(generate(), mimetype= "application/json")
+
         except Exception as e:
             return jsonify({"reply": str(e)})
     else:
-        return jsonify({"error": "No message provided"})
+        return Response(json.dumps({"error": "No message provided"}), mimetype='application/json')
     
     
 if __name__ == '__main__':

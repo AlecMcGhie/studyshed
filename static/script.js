@@ -86,20 +86,51 @@ function sendMessage(e) {
     msgDiv.className = 'chat-msg user';
     messages.appendChild(msgDiv);
 
+    // Model reply placeholder
+    var replyDiv = document.createElement('div');
+    replyDiv.textContent = '';
+    replyDiv.className = 'chat-msg bot';
+    messages.appendChild(replyDiv);
+
     // POST to backend (Flask endpoint)
     fetch('/api/chat', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({message: text})
     })
-    .then(resp => resp.json())
-    .then(data => {
-        // BOT/SERVER reply (left)
-        var replyDiv = document.createElement('div');
-        replyDiv.textContent = data.reply;
-        replyDiv.className = 'chat-msg bot';
-        messages.appendChild(replyDiv);
-        messages.scrollTop = messages.scrollHeight;
+    .then(resp => {
+        if (!resp.body) throw new Error('No response body');
+        const reader = resp.body.getReader();
+        let decoder = new TextDecoder();
+
+        function readChunk() {
+            return reader.read().then(({ done, value }) => {
+                if (done) {
+                    messages.scrollTop = messages.scrollHeight;
+                    return;
+                }
+                let chunkText = decoder.decode(value, {stream: true});
+                chunkText.split('\n').forEach(line => {
+                    if (!line.trim()) return;
+                    try {
+                        let data = JSON.parse(line);
+                        if (data.reply) {
+                            replyDiv.textContent += data.reply;
+                            messages.scrollTop = messages.scrollHeight;
+                        }
+                    } catch (e) {
+                        // Ignore parse errors
+                    }
+                });
+                return readChunk();
+            });
+        }
+        return readChunk();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        replyDiv.textContent = 'Error: ' + error.message;
+        replyDiv.className = 'chat-msg error';
     });
 
     input.value = '';
