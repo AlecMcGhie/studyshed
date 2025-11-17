@@ -57,11 +57,11 @@ def api_models():
                 'size': getattr(m, 'size', None),
                 'digest': getattr(m, 'digest', None),
                 'modified_at': str(getattr(m, 'modified_at', '')),
-                'family': getattr(details, 'family', '') if details else '',
-                'format': getattr(details, 'format', '') if details else '',
-                'parameter_size': getattr(details, 'parameter_size', '') if details else '',
-                'quantization_level': getattr(details, 'quantization_level', '') if details else '',
-                'license': getattr(details, 'license', '') if details and hasattr(details, 'license') else '',
+                'family': getattr(details, 'family', '') if details else 'Unknown',
+                'format': getattr(details, 'format', '') if details else 'Unknown',
+                'parameter_size': getattr(details, 'parameter_size', '') if details else 'Unknown',
+                'quantization_level': getattr(details, 'quantization_level', '') if details else 'Unknown',
+                'license': getattr(details, 'license', '') if details and hasattr(details, 'license') else 'Unknown',
             })
         return jsonify({'models': model_details, 'port': 11434})
     except Exception as e:
