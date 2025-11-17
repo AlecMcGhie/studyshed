@@ -28,6 +28,9 @@ function setActive(feature) {
         case 'calendar':
             loadCalendarUI();
             break;
+        case 'modelhub':
+            loadModelHubUI();
+            break;
         default:
             document.getElementById('mainContent').innerHTML = "<p>Feature coming soon.</p>";
     }
@@ -63,6 +66,11 @@ function loadPodcastUI() {
 function loadCalendarUI() {
     document.getElementById('titleBar').innerText = "Calendar";
     document.getElementById('mainContent').innerHTML = "<p>Calendar feature coming soon.</p>";
+}
+
+function loadModelHubUI() {
+    document.getElementById('titleBar').innerText = "Model Hub";
+    document.getElementById('mainContent').innerHTML = "<p>Model Hub feature coming soon.</p>";
 }
 
 function bindChatHandler() {

@@ -9,7 +9,8 @@ MENU_ITEMS = [
     {'key': 'chat', 'label': 'Chat'},
     {'key': 'flashcards', 'label': 'Flashcards'},
     {'key': 'podcast', 'label': 'Podcast'},
-    {'key': 'calendar', 'label': 'Calendar'}
+    {'key': 'calendar', 'label': 'Calendar'},
+    {'key': 'modelhub', 'label': 'Model Hub'}
 ]
 
 active_model = "gemma3n:e4b"
