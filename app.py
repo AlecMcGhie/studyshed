@@ -47,7 +47,7 @@ def api_models():
     try:
         response = ollama.list()
         models_list = response.models
-
+        print(models_list)
         model_details = []
         for m in models_list:
             details = getattr(m, 'details', None)
@@ -67,8 +67,6 @@ def api_models():
     except Exception as e:
         print("API error:", e)
         return jsonify({'error': str(e)}), 500
-
-# quick commit check
     
 if __name__ == '__main__':
     app.run(debug=True)
