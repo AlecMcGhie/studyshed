@@ -45,28 +45,28 @@ def api_chat():
 @app.route('/api/models')
 def api_models():
     try:
-        response = ollama.list()  # This returns a ListResponse object
-        print("Ollama list() output:", response, type(response))
-        models_list = response.models  # <- This is the list of Model objects
+        response = ollama.list()
+        models_list = response.models
 
         model_details = []
         for m in models_list:
-            name = m.model
+            details = getattr(m, 'details', None)
             model_details.append({
-                'name': name,
-                'active': name == active_model,
-                'size': m.size,
-                'digest': m.digest,
-                'modified_at': str(m.modified_at),
-                'family': getattr(m.details, 'family', ''),
-                'parameter_size': getattr(m.details, 'parameter_size', ''),
-                'quantization_level': getattr(m.details, 'quantization_level', ''),
+                'name': getattr(m, 'model', ''),
+                'active': getattr(m, 'model', '') == active_model,
+                'size': getattr(m, 'size', None),
+                'digest': getattr(m, 'digest', None),
+                'modified_at': str(getattr(m, 'modified_at', '')),
+                'family': getattr(details, 'family', '') if details else '',
+                'format': getattr(details, 'format', '') if details else '',
+                'parameter_size': getattr(details, 'parameter_size', '') if details else '',
+                'quantization_level': getattr(details, 'quantization_level', '') if details else '',
+                'license': getattr(details, 'license', '') if details and hasattr(details, 'license') else '',
             })
         return jsonify({'models': model_details, 'port': 11434})
     except Exception as e:
         print("API error:", e)
         return jsonify({'error': str(e)}), 500
-
 
 
     

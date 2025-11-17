@@ -79,20 +79,28 @@ function loadModelHubUI() {
             document.getElementById('modelList').innerHTML = `<p style="color:red;">${data.error}</p>`;
             return;
         }
-        document.getElementById('modelList').innerHTML = data.models.map(model => `
-            <div class="model-card${model.active ? ' active-model' : ''}">
-                <div class="model-name">${model.name}</div>
-                <div class="model-version">${model.description || ''}</div>
-                <div class="model-license">${model.license || ''}</div>
-                <div class="model-size">Size: ${(model.size / 1e6).toFixed(1)} MB</div>
-                <div class="model-actions">
-                    ${model.active ? '<span style="color:green;font-weight:bold;">Active</span>'
-                                   : '<button class="model-btn activate">Activate</button>'}
+        document.getElementById('modelList').innerHTML =
+            data.models.map(model => `
+                <div class="model-card${model.active ? ' active-model' : ''}">
+                    <div class="model-name">${model.name || "Unknown"}</div>
+                    <div class="model-family"><strong>Family:</strong> ${model.family}</div>
+                    <div class="model-format"><strong>Format:</strong> ${model.format}</div>
+                    <div class="model-params"><strong>Params:</strong> ${model.parameter_size}</div>
+                    <div class="model-quant"><strong>Quantization:</strong> ${model.quantization_level}</div>
+                    <div class="model-license"><strong>License:</strong> ${model.license}</div>
+                    <div class="model-size"><strong>Size:</strong> ${model.size ? (model.size / 1e6).toFixed(1) : "?"} MB</div>
+                    <div class="model-digest"><strong>Digest:</strong> ${model.digest}</div>
+                    <div class="model-modified"><strong>Modified:</strong> ${model.modified_at}</div>
+                    <div class="model-actions">
+                        ${model.active 
+                            ? '<span style="color:green;font-weight:bold;">Active</span>'
+                            : '<button class="model-btn activate">Activate</button>'}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
     });
 }
+
 
 
 
