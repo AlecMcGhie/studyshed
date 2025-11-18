@@ -16,12 +16,29 @@ function setActive(feature) {
     let activeBtn = document.getElementById('menu-' + feature);
     if (activeBtn) activeBtn.classList.add('active');
 
+    // Call the appropriate UI loader
     switch (feature) {
-        case 'chat': loadChatUI(); break;
-        case 'modelhub': loadModelHubUI(); break;
-        default: document.getElementById('mainContent').innerHTML = `<p>Coming soon: ${feature}</p>`;
+        case 'chat':
+            loadChatUI();
+            break;
+        case 'flashcards':
+            loadFlashcardsUI();
+            break;
+        case 'podcast':
+            loadPodcastUI();
+            break;
+        case 'calendar':
+            loadCalendarUI();
+            break;
+        case 'modelhub':
+            loadModelHubUI();
+            break;
+        default:
+            document.getElementById('mainContent').innerHTML = "<p>Feature coming soon.</p>";
     }
-    closeSidebar();
+
+    // Automatically close the sidebar after a choice is made
+    closeSidebar()
 }
 
 // UI Loaders
@@ -37,6 +54,21 @@ function loadChatUI() {
         </div>
     `;
     bindChatHandler();
+}
+
+function loadFlashcardsUI() {
+    document.getElementById('titleBar').innerText = "Flashcards";
+    document.getElementById('mainContent').innerHTML = "<p>Flashcards feature coming soon.</p>";
+}
+
+function loadPodcastUI() {
+    document.getElementById('titleBar').innerText = "Podcast";
+    document.getElementById('mainContent').innerHTML = "<p>Podcast feature coming soon.</p>";
+}
+
+function loadCalendarUI() {
+    document.getElementById('titleBar').innerText = "Calendar";
+    document.getElementById('mainContent').innerHTML = "<p>Calendar feature coming soon.</p>";
 }
 
 function loadModelHubUI() {
