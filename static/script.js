@@ -28,6 +28,9 @@ function setActive(feature) {
         case 'calendar':
             loadCalendarUI();
             break;
+        case 'modelhub':
+            loadModelHubUI();
+            break;
         default:
             document.getElementById('mainContent').innerHTML = "<p>Feature coming soon.</p>";
     }
@@ -42,7 +45,7 @@ function loadChatUI() {
         <div id="chatBox">
             <div id="chatMessages"></div>
             <form id="chatForm" onsubmit="sendMessage(event)" style="display:flex;gap:8px;">
-                <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
+                <input id="chatInput" type="text" placeholder="Ask your question..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
                 <button type="submit" style="padding:9px 22px;background:#4A90E2;border:none;color:white;border-radius:6px;font-size:1em;">Send</button>
             </form>
         </div>
@@ -65,6 +68,42 @@ function loadCalendarUI() {
     document.getElementById('mainContent').innerHTML = "<p>Calendar feature coming soon.</p>";
 }
 
+function loadModelHubUI() {
+    document.getElementById('titleBar').innerText = "Model Hub";
+    document.getElementById('mainContent').innerHTML = `<div id="modelList" class="model-hub-grid"></div>`;
+
+    fetch('/api/models')
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('modelList').innerHTML = `<p style="color:red;">${data.error}</p>`;
+            return;
+        }
+        document.getElementById('modelList').innerHTML =
+            data.models.map(model => `
+                <div class="model-card${model.active ? ' active-model' : ''}">
+                    <div class="model-name">${model.name || "Unknown"}</div>
+                    <div class="model-family"><strong>Family:</strong> ${model.family}</div>
+                    <div class="model-format"><strong>Format:</strong> ${model.format}</div>
+                    <div class="model-params"><strong>Params:</strong> ${model.parameter_size}</div>
+                    <div class="model-quant"><strong>Quantization:</strong> ${model.quantization_level}</div>
+                    <div class="model-license"><strong>License:</strong> ${model.license}</div>
+                    <div class="model-size"><strong>Size:</strong> ${model.size ? (model.size / 1e6).toFixed(1) : "?"} MB</div>
+                    <div class="model-digest"><strong>Digest:</strong> ${model.digest}</div>
+                    <div class="model-modified"><strong>Modified:</strong> ${model.modified_at}</div>
+                    <div class="model-actions">
+                        ${model.active 
+                            ? '<span style="color:green;font-weight:bold;">Active</span>'
+                            : '<button class="model-btn activate">Activate</button>'}
+                    </div>
+                </div>
+            `).join('');
+    });
+}
+
+
+
+
 function bindChatHandler() {
     var form = document.getElementById('chatForm');
     if (form) {
@@ -77,11 +116,62 @@ function sendMessage(e) {
     var input = document.getElementById('chatInput');
     var messages = document.getElementById('chatMessages');
     if (!input || !messages) return;
-    if (input.value.trim() === '') return;
+    var text = input.value.trim();
+    if (text === '') return;
+
+    // USER message right
     var msgDiv = document.createElement('div');
-    msgDiv.textContent = input.value;
-    msgDiv.className = 'chat-msg';
+    msgDiv.textContent = text;
+    msgDiv.className = 'chat-msg user';
     messages.appendChild(msgDiv);
+
+    // Model reply placeholder
+    var replyDiv = document.createElement('div');
+    replyDiv.textContent = '';
+    replyDiv.className = 'chat-msg bot';
+    messages.appendChild(replyDiv);
+
+    // POST to backend (Flask endpoint)
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text})
+    })
+    .then(resp => {
+        if (!resp.body) throw new Error('No response body');
+        const reader = resp.body.getReader();
+        let decoder = new TextDecoder();
+
+        function readChunk() {
+            return reader.read().then(({ done, value }) => {
+                if (done) {
+                    messages.scrollTop = messages.scrollHeight;
+                    return;
+                }
+                let chunkText = decoder.decode(value, {stream: true});
+                chunkText.split('\n').forEach(line => {
+                    if (!line.trim()) return;
+                    try {
+                        let data = JSON.parse(line);
+                        if (data.reply) {
+                            replyDiv.textContent += data.reply;
+                            messages.scrollTop = messages.scrollHeight;
+                        }
+                    } catch (e) {
+                        // Ignore parse errors
+                    }
+                });
+                return readChunk();
+            });
+        }
+        return readChunk();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        replyDiv.textContent = 'Error: ' + error.message;
+        replyDiv.className = 'chat-msg error';
+    });
+
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
 }
@@ -90,5 +180,7 @@ function sendMessage(e) {
 window.onload = function() {
     document.getElementById('sidebar').classList.remove('visible');
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
-    setActive('chat');
+    // Set the initial landing page 
+    setActive('modelhub');
+    // git check
 };

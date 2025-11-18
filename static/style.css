@@ -103,10 +103,11 @@ body {
 
 .main-content {
     padding: 2em;
+    height: auto;
 }
 
 #chatBox {
-    max-width:500px;
+    max-width:1500px;
     margin:20px auto;
     padding:20px;
     background:#fff;
@@ -114,22 +115,50 @@ body {
     box-shadow:0 1px 8px rgba(100,139,181,0.11);
 }
 #chatMessages {
+    display: flex;
+    flex-direction: column;
     min-height:180px;
     margin-bottom:16px;
-    max-height:240px;
+    max-height:500px;
     overflow-y:auto;
     background: #f4f7fc;
     border-radius: 7px;
     padding: 8px;
     font-size: 1em;
 }
+
 .chat-msg {
     padding: 7px;
     margin-bottom: 5px;
-    background: #e3eaf7;
     border-radius: 6px;
 }
 
+.chat-msg.user {
+    background: #e3eaf7;
+    color: #243c4a;
+    text-align: right;
+    border-radius: 7px 7px 7px 1px;
+    align-self: flex-end;
+    margin-bottom: 7px;
+    max-width: 85%;
+  }
+
+  .chat-msg.bot {
+    background: #fbe4d5;
+    color: #865600;
+    text-align: left;
+    border-radius: 7px 7px 1px 7px;
+    align-self: flex-start;
+    margin-bottom: 7px;
+    max-width: 85%;
+  }
+
+  .model-card.active-model {
+    border: 2px solid #4A90E2;
+    box-shadow: 0 0 10px #4A90E240;
+   }
+
+  
 @media (max-width: 700px) {
     .sidebar { width: 140px; max-width: 140px; }
     .title-bar { font-size: 1.1em; padding: 1em 1em;}

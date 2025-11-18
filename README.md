@@ -17,3 +17,6 @@ cd studyshed
 ./setup.sh
 ```
 
+## Step 3: Connect to local host
+
+Type http://127.0.0.1:5000 into your browser
