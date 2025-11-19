@@ -1,3 +1,4 @@
+// Sidebar management
 function openSidebar() {
     document.getElementById('sidebar').classList.add('visible');
     document.getElementById('openSidebarBtn').classList.add('hide-toggle-btn');
@@ -8,6 +9,7 @@ function closeSidebar() {
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
 }
 
+// Set active feature and load UI
 function setActive(feature) {
     let menu = document.getElementById('menu');
     Array.from(menu.children).forEach(btn => btn.classList.remove('active'));
@@ -39,6 +41,7 @@ function setActive(feature) {
     closeSidebar()
 }
 
+// UI Loaders
 function loadChatUI() {
     document.getElementById('titleBar').innerText = "Chat";
     document.getElementById('mainContent').innerHTML = `
@@ -70,117 +73,339 @@ function loadCalendarUI() {
 
 function loadModelHubUI() {
     document.getElementById('titleBar').innerText = "Model Hub";
-    document.getElementById('mainContent').innerHTML = `<div id="modelList" class="model-hub-grid"></div>`;
+    document.getElementById('mainContent').innerHTML = `
+        <div id="hardware-monitor">
+            <h3>System Memory</h3>
+            <div id="memory-usage-bar" class="memory-bar">
+                <div id="memory-used-bar" class="bar-used"></div>
+            </div>
+            <p id="memory-usage-text"></p>
+        </div>
+        <h2>My Models</h2>
+        <div id="myModels" class="model-hub-grid"></div>
+        <h2>Browse Models</h2>
+        <div class="search-container">
+            <input type="text" id="modelSearch" placeholder="Search for models..." onkeyup="filterModels()">
+        </div>
+        <div id="browseModels" class="model-hub-grid"></div>
+    `;
+    fetchModels();
+    loadBrowseModels();
+    fetchHardwareData();
 
-    fetch('/api/models')
-    .then(resp => resp.json())
-    .then(data => {
-        if (data.error) {
-            document.getElementById('modelList').innerHTML = `<p style="color:red;">${data.error}</p>`;
-            return;
+    // Event delegation for model cards
+    document.getElementById('mainContent').addEventListener('click', function(event) {
+        const card = event.target.closest('.model-card');
+        if (card && card.dataset.modelName) {
+            showModelDetails(card.dataset.modelName);
         }
-        document.getElementById('modelList').innerHTML =
-            data.models.map(model => `
-                <div class="model-card${model.active ? ' active-model' : ''}">
-                    <div class="model-name">${model.name || "Unknown"}</div>
-                    <div class="model-family"><strong>Family:</strong> ${model.family}</div>
-                    <div class="model-format"><strong>Format:</strong> ${model.format}</div>
-                    <div class="model-params"><strong>Params:</strong> ${model.parameter_size}</div>
-                    <div class="model-quant"><strong>Quantization:</strong> ${model.quantization_level}</div>
-                    <div class="model-license"><strong>License:</strong> ${model.license}</div>
-                    <div class="model-size"><strong>Size:</strong> ${model.size ? (model.size / 1e6).toFixed(1) : "?"} MB</div>
-                    <div class="model-digest"><strong>Digest:</strong> ${model.digest}</div>
-                    <div class="model-modified"><strong>Modified:</strong> ${model.modified_at}</div>
-                    <div class="model-actions">
-                        ${model.active 
-                            ? '<span style="color:green;font-weight:bold;">Active</span>'
-                            : '<button class="model-btn activate">Activate</button>'}
-                    </div>
-                </div>
-            `).join('');
     });
 }
 
+function fetchHardwareData() {
+    fetch('/api/system/hardware')
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('hardware-monitor').innerHTML = `<p style="color:red;">${data.error}</p>`;
+                return;
+            }
+            const usedMemoryGB = (data.used_memory / 1e9).toFixed(2);
+            const totalMemoryGB = (data.total_memory / 1e9).toFixed(2);
+            const percentageUsed = (data.used_memory / data.total_memory) * 100;
 
+            document.getElementById('memory-used-bar').style.width = percentageUsed + '%';
+            document.getElementById('memory-usage-text').innerText = `${usedMemoryGB} GB / ${totalMemoryGB} GB Used`;
+        });
+}
 
+// Model Hub functions
+function fetchModels() {
+    fetch('/api/models')
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('myModels').innerHTML = `<p style="color:red;">${data.error}</p>`;
+                return;
+            }
+            const grid = document.getElementById('myModels');
+            grid.innerHTML = data.models.map(model => `
+            <div class="model-card${model.active ? ' active-model' : ''}" data-model-name="${model.name}">
+                    <div class="model-name">${model.name || "Unknown"}</div>
+                    <div class="model-family"><strong>Family:</strong> ${model.family}</div>
+                    <div class="model-size"><strong>Size:</strong> ${model.size ? (model.size / 1e9).toFixed(2) : "?"} GB</div>
+                    <div class="model-actions">
+                        ${model.active 
+                            ? '<span class="active-status">Active</span>'
+                            : `<button class="model-btn activate-btn" data-model="${model.name}">Activate</button>`
+                        }
+                        <button class="model-btn delete-btn" data-model="${model.name}">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+            addModelActionListeners();
+        });
+}
 
-function bindChatHandler() {
-    var form = document.getElementById('chatForm');
-    if (form) {
-        form.onsubmit = sendMessage;
+function addModelActionListeners() {
+    document.querySelectorAll('.activate-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            activateModel(button.dataset.model);
+        });
+    });
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            deleteModel(button.dataset.model);
+        });
+    });
+    document.querySelectorAll('.download-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            downloadModel(button.dataset.model);
+        });
+    });
+}
+
+function activateModel(modelName) {
+    fetch('/api/models/activate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({model_name: modelName})
+    }).then(() => fetchModels());
+}
+
+function deleteModel(modelName) {
+    if (confirm(`Are you sure you want to delete ${modelName}?`)) {
+        fetch('/api/models/delete', {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({model_name: modelName})
+        }).then(() => fetchModels());
     }
+}
+
+function loadBrowseModels() {
+    Promise.all([
+        fetch('/api/ollama/library').then(res => res.json()),
+        fetch('/api/system/hardware').then(res => res.json())
+    ]).then(([library, hardware]) => {
+        if (library.error || hardware.error) {
+            document.getElementById('browseModels').innerHTML = `<p style="color:red;">Could not load model library or hardware info.</p>`;
+            return;
+        }
+
+        const availableMemoryGB = hardware.available_memory / 1e9;
+        const grid = document.getElementById('browseModels');
+
+        const popularModels = ["gemma:2b", "llama2:7b", "mistral:7b", "codellama:7b", "phi:latest"];
+
+        // Separate popular models from the rest
+        const popular = library.filter(m => popularModels.includes(m.name));
+        const others = library.filter(m => !popularModels.includes(m.name));
+
+        // Sort the other models alphabetically
+        others.sort((a, b) => a.name.localeCompare(b.name));
+
+        const sortedLibrary = [...popular, ...others];
+
+        grid.innerHTML = sortedLibrary.map(model => {
+            // The API provides the size in bytes, which we can use for a rough compatibility estimate.
+            // A common rule of thumb is that the available RAM should be at least the size of the model.
+            const modelSizeGB = model.size > 0 ? (model.size / 1e9).toFixed(2) : 0;
+            const isCompatible = modelSizeGB > 0 && modelSizeGB <= availableMemoryGB;
+            const compatibilityClass = isCompatible ? 'compatible' : 'incompatible';
+
+            return `
+                <div class="model-card" data-model-name="${model.name}">
+                    <div class="model-name">${model.name}</div>
+                    ${modelSizeGB > 0 ? `<div class="model-size"><strong>Size:</strong> ${modelSizeGB} GB</div>` : ''}
+                    <div class="compatibility-indicator">
+                        <strong>Compatibility:</strong>
+                        <div class="memory-bar small-bar">
+                            <div class="bar-used ${compatibilityClass}" style="width: ${isCompatible ? '100' : '100'}%;"></div>
+                        </div>
+                        <span class="${compatibilityClass}">${isCompatible ? 'Compatible' : 'Not Enough RAM'}</span>
+                    </div>
+                    <div class="model-actions">
+                        <button class="model-btn download-btn" data-model="${model.name}">Download</button>
+                        <div class="progress-container" id="progress-${model.name}" style="display:none;">
+                            <div class="progress-bar"></div>
+                            <div class="progress-label"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        addModelActionListeners();
+    });
+}
+
+function downloadModel(modelName) {
+    const progressContainer = document.getElementById(`progress-${modelName}`);
+    const progressBar = progressContainer.querySelector('.progress-bar');
+    const progressLabel = progressContainer.querySelector('.progress-label');
+    progressContainer.style.display = 'block';
+
+    fetch('/api/models/download', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({model_name: modelName})
+    }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        function processText({ done, value }) {
+            if (done) {
+                progressLabel.innerText = 'Download complete!';
+                fetchModels(); // Refresh local models list
+                return;
+            }
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            lines.forEach(line => {
+                if (line) {
+                    const data = JSON.parse(line);
+                    if (data.total && data.completed) {
+                        const percentage = Math.round((data.completed / data.total) * 100);
+                        progressBar.style.width = percentage + '%';
+                        progressLabel.innerText = `${percentage}%`;
+                    } else if (data.status) {
+                        progressLabel.innerText = data.status;
+                    }
+                }
+            });
+            return reader.read().then(processText);
+        }
+        return reader.read().then(processText);
+    });
+}
+
+function filterModels() {
+    const filter = document.getElementById('modelSearch').value.toLowerCase();
+    document.querySelectorAll('#browseModels .model-card').forEach(card => {
+        const modelName = card.dataset.modelName.toLowerCase();
+        card.style.display = modelName.includes(filter) ? "" : "none";
+    });
+}
+
+// Chat functions
+function bindChatHandler() {
+    document.getElementById('chatForm').onsubmit = sendMessage;
 }
 
 function sendMessage(e) {
     e.preventDefault();
     var input = document.getElementById('chatInput');
     var messages = document.getElementById('chatMessages');
-    if (!input || !messages) return;
-    var text = input.value.trim();
-    if (text === '') return;
+    if (!input || !messages || !input.value.trim()) return;
 
-    // USER message right
-    var msgDiv = document.createElement('div');
-    msgDiv.textContent = text;
-    msgDiv.className = 'chat-msg user';
-    messages.appendChild(msgDiv);
+    appendMessage(input.value, 'user', messages);
 
-    // Model reply placeholder
-    var replyDiv = document.createElement('div');
-    replyDiv.textContent = '';
-    replyDiv.className = 'chat-msg bot';
-    messages.appendChild(replyDiv);
+    const replyDiv = appendMessage('', 'bot', messages);
 
-    // POST to backend (Flask endpoint)
     fetch('/api/chat', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({message: text})
+        body: JSON.stringify({message: input.value.trim()})
     })
-    .then(resp => {
-        if (!resp.body) throw new Error('No response body');
-        const reader = resp.body.getReader();
-        let decoder = new TextDecoder();
-
-        function readChunk() {
-            return reader.read().then(({ done, value }) => {
-                if (done) {
-                    messages.scrollTop = messages.scrollHeight;
-                    return;
-                }
-                let chunkText = decoder.decode(value, {stream: true});
-                chunkText.split('\n').forEach(line => {
-                    if (!line.trim()) return;
-                    try {
-                        let data = JSON.parse(line);
-                        if (data.reply) {
-                            replyDiv.textContent += data.reply;
-                            messages.scrollTop = messages.scrollHeight;
-                        }
-                    } catch (e) {
-                        // Ignore parse errors
-                    }
-                });
-                return readChunk();
-            });
-        }
-        return readChunk();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        replyDiv.textContent = 'Error: ' + error.message;
-        replyDiv.className = 'chat-msg error';
-    });
+    .then(handleStream(replyDiv, messages))
+    .catch(error => console.error('Error:', error));
 
     input.value = '';
-    messages.scrollTop = messages.scrollHeight;
 }
 
-// Load Chat UI by default on page load
-window.onload = function() {
+function appendMessage(content, type, container) {
+    const msgDiv = document.createElement('div');
+    msgDiv.textContent = content;
+    msgDiv.className = `chat-msg ${type}`;
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+    return msgDiv;
+}
+
+function handleStream(element, container) {
+    return function(response) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        function readChunk() {
+            reader.read().then(({ done, value }) => {
+                if (done) {
+                    container.scrollTop = container.scrollHeight;
+                    return;
+                }
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                lines.forEach(line => {
+                    if (line) {
+                        const data = JSON.parse(line);
+                        if (data.reply) {
+                            element.textContent += data.reply;
+                        }
+                    }
+                });
+                container.scrollTop = container.scrollHeight;
+                readChunk();
+            });
+        }
+        readChunk();
+    }
+}
+
+// Modal display functions
+function showModelDetails(modelName) {
+    Promise.all([
+        fetch('/api/models').then(res => res.json()),
+        fetch('/api/ollama/library').then(res => res.json())
+    ]).then(([local, library]) => {
+        const localModel = local.models.find(m => m.name === modelName);
+        const libraryModel = library.find(m => m.name === modelName);
+
+        const model = localModel || libraryModel;
+        if (!model) return;
+
+        const detailsContainer = document.getElementById('modal-model-details');
+
+        // Handle the different data structures
+        const details = localModel ? model : model.details;
+
+        detailsContainer.innerHTML = `
+            <h3>${model.name}</h3>
+            <p><strong>Family:</strong> ${details?.family || 'N/A'}</p>
+            <p><strong>Format:</strong> ${details?.format || 'N/A'}</p>
+            <p><strong>Parameter Size:</strong> ${details?.parameter_size || 'N/A'}</p>
+            <p><strong>Quantization Level:</strong> ${details?.quantization_level || 'N/A'}</p>
+            <div class="model-actions">
+                ${localModel
+                    ? `
+                        <button class="model-btn activate-btn" data-model="${model.name}">Activate</button>
+                        <button class="model-btn delete-btn" data-model="${model.name}">Delete</button>
+                    `
+                    : `<button class="model-btn download-btn" data-model="${model.name}">Download</button>`
+                }
+            </div>
+        `;
+
+        // Re-attach listeners for the new buttons in the modal
+        addModelActionListeners();
+
+        document.getElementById('model-details-modal').style.display = 'block';
+    });
+}
+
+function closeModelDetails() {
+    document.getElementById('model-details-modal').style.display = 'none';
+}
+
+// Initial load
+window.onload = () => {
     document.getElementById('sidebar').classList.remove('visible');
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
-    // Set the initial landing page 
     setActive('modelhub');
-    // git check
+
+    // Attach listener to close the modal
+    document.querySelector('.close-modal-btn').onclick = closeModelDetails;
 };
