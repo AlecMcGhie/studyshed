@@ -144,8 +144,8 @@ body {
   }
 
   .chat-msg.bot {
-    background: #fbe4d5;
-    color: #865600;
+    background: #cacaca;
+    color: #000000;
     text-align: left;
     border-radius: 7px 7px 1px 7px;
     align-self: flex-start;
