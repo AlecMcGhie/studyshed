@@ -1,3 +1,6 @@
+// Selected start page
+const START_SCREEN = 'modelhub';
+
 function openSidebar() {
     document.getElementById('sidebar').classList.add('visible');
     document.getElementById('openSidebarBtn').classList.add('hide-toggle-btn');
@@ -194,7 +197,7 @@ window.onload = function() {
     document.getElementById('sidebar').classList.remove('visible');
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
     // Set the initial landing page 
-    setActive('modelhub');
+    setActive(START_SCREEN || 'modelhub');
 };
 
 let selectedModel = null;
