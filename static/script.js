@@ -55,6 +55,9 @@ function loadChatUI() {
                 <span id="closeModelModal" style="position:absolute;top:10px;right:18px; font-size:1.7em; cursor:pointer;">&times;</span>
                 <h2>Select Model</h2>
                 <ul id="modelList" style="list-style:none;padding:0;margin:0;"></ul>
+                <br><br/>
+                <button id="openModelPage" onclick="setActive('modelhub')" style="margin-bottom:12px;padding:8px 16px;background:#4A90E2;border:none;color:white;border-radius:6px;font-size:1em;cursor:pointer;">Go to Model Hub</button>
+
             </div>
         </div>
     `;
@@ -192,7 +195,6 @@ window.onload = function() {
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
     // Set the initial landing page 
     setActive('modelhub');
-    // git check
 };
 
 let selectedModel = null;
