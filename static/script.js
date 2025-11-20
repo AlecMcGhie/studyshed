@@ -1,5 +1,5 @@
 // Selected start page
-const START_SCREEN = 'modelhub';
+const START_SCREEN = 'chat'; // Options: 'chat', 'flashcards', 'podcast', 'calendar', 'modelhub'
 
 function openSidebar() {
     document.getElementById('sidebar').classList.add('visible');
@@ -46,6 +46,7 @@ function loadChatUI() {
     document.getElementById('titleBar').innerText = "Chat";
     document.getElementById('mainContent').innerHTML = `
         <div id="chatBox">
+            <div id="modelIndicator" style="margin-bottom:6px;font-size:1em;color:#7B8DAB;font-weight:500;">Current Model: <span id="currentModelName"></span></div>
             <div id="chatMessages"></div>
             <form id="chatForm" onsubmit="sendMessage(event)" style="display:flex;gap:8px;">
                 <input id="chatInput" type="text" placeholder="Ask your question..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
@@ -66,6 +67,7 @@ function loadChatUI() {
     `;
     bindChatHandler();
     bindModelPopup();
+    setModelIndicator();
 }
 
 
@@ -229,6 +231,7 @@ function bindModelPopup() {
                             document.getElementById('modelModal').style.display = 'none';
                             // Update display of active model, e.g. in chat UI
                             updateActiveModelDisplay(selectedModel);
+                            setModelIndicator();
                         });
                     };
                     list.appendChild(li);
@@ -247,4 +250,15 @@ function updateActiveModelDisplay(modelName) {
     if (titleBar) {
         titleBar.innerHTML = `Chat <span style="font-size:0.69em;color:#7B8DAB;padding-left:8px;">(${modelName})</span>`;
     }
+}
+
+function setModelIndicator() {
+    fetch('/api/models')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.models) {
+                const active = data.models.find(m => m.active);
+                document.getElementById('currentModelName').textContent = active ? active.name : "None";
+            }
+        });
 }
