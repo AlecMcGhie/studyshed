@@ -158,6 +158,84 @@ body {
     box-shadow: 0 0 10px #4A90E240;
    }
 
+   /* Model button next to chat send */
+#openModelPopup {
+  padding: 9px 22px;
+  background: #7B8DAB;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-size: 1em;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#openModelPopup:hover {
+  background: #5d6c8e;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 1.2em 1.7em;
+  width: 320px;
+  border-radius: 10px;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+#closeModelModal {
+  position: absolute;
+  top: 12px; right: 20px;
+  font-size: 1.6em;
+  cursor: pointer;
+  color: #7B8DAB;
+}
+
+/* Model list item */
+#modelList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+#modelList li {
+  padding: 0.6em 0.5em;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 1em;
+  color: #223;
+  transition: background 0.18s, color 0.18s;
+}
+#modelList li:hover {
+  background: #f4f8fd;
+  color: #4A90E2;
+}
+#modelList li.selected {
+  font-weight: bold;
+  color: #4A90E2;
+  background: #e9f1ff;
+  border-left: 3px solid #7B8DAB;
+}
+
+/* Optional: show the selected model in the chat title bar */
+#titleBar span {
+  font-size: 0.69em;
+  color: #7B8DAB;
+  padding-left: 8px;
+}
+
+
   
 @media (max-width: 700px) {
     .sidebar { width: 140px; max-width: 140px; }

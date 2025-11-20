@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, Response
 import ollama
 import json
+import requests
 
 app = Flask(__name__)
 
@@ -67,6 +68,17 @@ def api_models():
     except Exception as e:
         print("API error:", e)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/set_active_model', methods=['POST'])
+def api_set_active_model():
+    global active_model
+    data = request.get_json()
+    model_name = data.get("model_name", "")
+    if model_name:
+        active_model = model_name
+        return jsonify({"status": "success", "active_model": active_model})
+    else:
+        return jsonify({"status": "error", "message": "No model name provided"}), 400
     
 if __name__ == '__main__':
     app.run(debug=True)

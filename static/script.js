@@ -46,12 +46,22 @@ function loadChatUI() {
             <div id="chatMessages"></div>
             <form id="chatForm" onsubmit="sendMessage(event)" style="display:flex;gap:8px;">
                 <input id="chatInput" type="text" placeholder="Ask your question..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
+                <button id="openModelPopup" type="button" style="padding:9px 22px;background:#7B8DAB;border:none;color:white;border-radius:6px;font-size:1em;margin-right:8px;">Model</button>
                 <button type="submit" style="padding:9px 22px;background:#4A90E2;border:none;color:white;border-radius:6px;font-size:1em;">Send</button>
             </form>
         </div>
+        <div id="modelModal" class="modal" style="display:none;">
+            <div class="modal-content" style="background:#fff;padding:1em 1.5em;width:320px;border-radius:10px;position:relative;">
+                <span id="closeModelModal" style="position:absolute;top:10px;right:18px; font-size:1.7em; cursor:pointer;">&times;</span>
+                <h2>Select Model</h2>
+                <ul id="modelList" style="list-style:none;padding:0;margin:0;"></ul>
+            </div>
+        </div>
     `;
     bindChatHandler();
+    bindModelPopup();
 }
+
 
 function loadFlashcardsUI() {
     document.getElementById('titleBar').innerText = "Flashcards";
@@ -184,3 +194,52 @@ window.onload = function() {
     setActive('modelhub');
     // git check
 };
+
+let selectedModel = null;
+
+// Model selection handler for popup
+function bindModelPopup() {
+    document.getElementById('openModelPopup').onclick = function() {
+        fetch('/api/models')
+            .then(resp => resp.json())
+            .then(data => {
+                const models = data.models;
+                const list = document.getElementById('modelList');
+                list.innerHTML = '';
+                models.forEach(model => {
+                    const li = document.createElement('li');
+                    li.textContent = model.name || model;
+                    if (model.active) li.className = 'selected';
+                    li.onclick = () => {
+                        selectedModel = model.name || model;
+                        // Set the active model on the backend
+                        fetch('/api/set_active_model', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({model_name: selectedModel})
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            // Optionally show confirmation
+                            document.getElementById('modelModal').style.display = 'none';
+                            // Update display of active model, e.g. in chat UI
+                            updateActiveModelDisplay(selectedModel);
+                        });
+                    };
+                    list.appendChild(li);
+                });
+                document.getElementById('modelModal').style.display = 'flex';
+            });
+    };
+    document.getElementById('closeModelModal').onclick = function() {
+        document.getElementById('modelModal').style.display = 'none';
+    };
+}
+
+// (Optional) Show current model in chat UI
+function updateActiveModelDisplay(modelName) {
+    let titleBar = document.getElementById('titleBar');
+    if (titleBar) {
+        titleBar.innerHTML = `Chat <span style="font-size:0.69em;color:#7B8DAB;padding-left:8px;">(${modelName})</span>`;
+    }
+}
