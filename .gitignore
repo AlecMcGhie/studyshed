@@ -1,3 +1,15 @@
+# Ignore Mac system files
 .DS_Store
 .github/.DS_Store
-tests/__pycache__/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment directories
+venv/
+env/
+.venv/
+.env/
