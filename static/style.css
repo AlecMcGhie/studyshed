@@ -252,6 +252,17 @@ body {
   cursor: pointer;
   color: #7B8DAB;
 }
+#chatInput {
+  width: 100%;
+  min-height: 48px;
+  max-height: 200px;
+  padding: 8px;
+  border: 1px solid #d0d6e0;
+  border-radius: 6px;
+  font-size: 0.95em;
+  resize: vertical;
+  box-sizing: border-box;
+}
 
 /* Model list item */
 #modelList {

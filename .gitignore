@@ -13,3 +13,8 @@ venv/
 env/
 .venv/
 .env/
+
+# Ignore database files
+/data/
+/data/*.db
+/data/*.sqlite3

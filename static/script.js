@@ -60,9 +60,9 @@ function loadChatUI() {
               </div>
             </div>
             <div id="chatMessages"></div>
-            <form id="chatForm" style="display:flex;margin-top:10px;">
-              <input id="chatInput" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;" placeholder="Type a message"/>
-              <button type="submit" style="margin-left:8px;">Send</button>
+            <form id="chatForm" style="display:flex;margin-top:10px;gap:8px;align-items:flex-end;">
+              <textarea id="chatInput" rows="3" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;resize:vertical" placeholder="Type a message (Shift+Enter for newline)"></textarea>
+              <button id="sendBtn" type="submit" style="padding:8px 12px;border-radius:6px;">Send</button>
             </form>
           </div>
         </section>
@@ -73,8 +73,21 @@ function loadChatUI() {
     document.getElementById('newConvBtn').addEventListener('click', createNewConversation);
     bindModelPopup();
     fetchAndRenderConversations();
-}
 
+    // Enter = send, Shift+Enter = newline
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                // requestSubmit triggers the form 'submit' event so sendMessage runs
+                const form = document.getElementById('chatForm');
+                if (form.requestSubmit) form.requestSubmit();
+                else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        });
+    }
+}
 
 function loadFlashcardsUI() {
     document.getElementById('titleBar').innerText = "Flashcards";

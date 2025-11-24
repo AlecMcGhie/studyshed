@@ -1,16 +1,24 @@
-# Database system for chat log
-import sqlite3
-import tempfile
-import uuid
-import atexit
 import os
+import sqlite3
+import uuid
 import threading
+import atexit
 from datetime import datetime
 
-# ephemeral DB file in OS temp dir, deleted on exit
-DB_PATH = os.path.join(tempfile.gettempdir(), f"studyshed_conv_{os.getpid()}_{uuid.uuid4().hex}.db")
+# persistent DB inside project data/ so it survives restarts
+base_dir = os.path.dirname(os.path.dirname(__file__))  # project root (/Users/alec/Desktop/studyshed)
+data_dir = os.path.join(base_dir, "data")
+os.makedirs(data_dir, exist_ok=True)
+DB_PATH = os.path.join(data_dir, "conversations.db")
+
 _conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 _conn.row_factory = sqlite3.Row
+# use WAL for better concurrency
+try:
+    _conn.execute("PRAGMA journal_mode=WAL;")
+except Exception:
+    pass
+
 _lock = threading.Lock()
 
 def _init_db():
@@ -30,6 +38,7 @@ def _init_db():
             ts TEXT,
             FOREIGN KEY(conv_id) REFERENCES conversations(id)
         )""")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conv_id)")
         _conn.commit()
 
 _init_db()
@@ -54,7 +63,8 @@ def append_message(conv_id, role, content):
 def get_conversation_messages(conv_id):
     with _lock:
         cur = _conn.execute(
-            "SELECT role, content, ts FROM messages WHERE conv_id = ? ORDER BY id ASC", (conv_id,)
+            "SELECT role, content, ts FROM messages WHERE conv_id = ? ORDER BY id ASC",
+            (conv_id,)
         )
         rows = cur.fetchall()
     return [{"role": r["role"], "content": r["content"], "ts": r["ts"]} for r in rows]
@@ -67,11 +77,10 @@ def get_all_conversations():
 
 def cleanup():
     try:
-        _conn.close()
-    finally:
-        try:
-            os.remove(DB_PATH)
-        except Exception:
-            pass
+        with _lock:
+            _conn.commit()
+            _conn.close()
+    except Exception:
+        pass
 
 atexit.register(cleanup)
