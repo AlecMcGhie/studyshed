@@ -61,7 +61,7 @@ function loadChatUI() {
             </div>
             <div id="chatMessages"></div>
             <form id="chatForm" style="display:flex;margin-top:10px;gap:8px;align-items:flex-end;">
-              <textarea id="chatInput" rows="3" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;resize:vertical" placeholder="Type a message (Shift+Enter for newline)"></textarea>
+              <textarea id="chatInput" rows="3" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;resize:vertical" placeholder="Type a message"></textarea>
               <button id="sendBtn" type="submit" style="padding:8px 12px;border-radius:6px;">Send</button>
             </form>
           </div>

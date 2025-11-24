@@ -210,8 +210,7 @@ body {
     box-shadow: 0 0 10px #4A90E240;
    }
 
-   /* Model button next to chat send */
-#openModelPopup {
+#newConvBtn {
   padding: 9px 22px;
   background: #7B8DAB;
   border: none;
@@ -222,8 +221,23 @@ body {
   cursor: pointer;
   transition: background 0.2s;
 }
-#openModelPopup:hover {
+#newConvBtn:hover{
   background: #5d6c8e;
+}
+   /* Model button next to chat send */
+#openModelPopup {
+  padding: 9px 22px;
+  background: #2075fc;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-size: 1em;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#openModelPopup:hover {
+  background: #1c48b1;
 }
 
 /* Modal styles */
@@ -253,7 +267,7 @@ body {
   color: #7B8DAB;
 }
 #chatInput {
-  width: 100%;
+  font-family: Arial, sans-serif;  width: 100%;
   min-height: 48px;
   max-height: 200px;
   padding: 8px;
