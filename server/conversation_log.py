@@ -6,7 +6,7 @@ import atexit
 from datetime import datetime
 
 # persistent DB inside project data/ so it survives restarts
-base_dir = os.path.dirname(os.path.dirname(__file__))  # project root (/Users/alec/Desktop/studyshed)
+base_dir = os.path.dirname(os.path.dirname(__file__))  
 data_dir = os.path.join(base_dir, "data")
 os.makedirs(data_dir, exist_ok=True)
 DB_PATH = os.path.join(data_dir, "conversations.db")
@@ -78,8 +78,13 @@ def get_all_conversations():
 def cleanup():
     try:
         with _lock:
-            _conn.commit()
-            _conn.close()
+            cur = _conn.cursor()
+            cur.execute("SELECT id FROM conversations WHERE id NOT IN (SELECT conv_id FROM messages)")
+            conversations_to_delete = [row["id"] for row in cur.fetchall()]
+            if conversations_to_delete:
+                cur.execute("DELETE FROM conversations WHERE id IN ({})".format(','.join(['?']*len(conversations_to_delete))), conversations_to_delete)
+                _conn.commit()
+        _conn.close()
     except Exception:
         pass
 
