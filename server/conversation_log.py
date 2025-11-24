@@ -4,6 +4,7 @@ import uuid
 import threading
 import atexit
 from datetime import datetime
+import ollama
 
 # persistent DB inside project data/ so it survives restarts
 base_dir = os.path.dirname(os.path.dirname(__file__))  
@@ -84,6 +85,9 @@ def cleanup():
             if conversations_to_delete:
                 cur.execute("DELETE FROM conversations WHERE id IN ({})".format(','.join(['?']*len(conversations_to_delete))), conversations_to_delete)
                 _conn.commit()
+            
+            # TODO Add functionality for summarizing each conversation
+            
         _conn.close()
     except Exception:
         pass
