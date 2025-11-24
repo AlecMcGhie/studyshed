@@ -77,6 +77,13 @@ def api_chat():
     else:
         return Response(json.dumps({"error": "No message provided"}), mimetype='application/json')
     
+@app.route('/api/conversations', methods=['GET'])
+def api_list_conversations():
+    try:
+        convs = conversation_log.get_all_conversations()
+        return jsonify({"conversations": convs})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 @app.route('/api/models')
 def api_models():

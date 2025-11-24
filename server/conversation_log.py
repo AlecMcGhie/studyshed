@@ -59,6 +59,12 @@ def get_conversation_messages(conv_id):
         rows = cur.fetchall()
     return [{"role": r["role"], "content": r["content"], "ts": r["ts"]} for r in rows]
 
+def get_all_conversations():
+    with _lock:
+        cur = _conn.execute("SELECT id, created_at FROM conversations ORDER BY created_at DESC")
+        rows = cur.fetchall()
+    return [{"id": r["id"], "created_at": r["created_at"]} for r in rows]
+
 def cleanup():
     try:
         _conn.close()
