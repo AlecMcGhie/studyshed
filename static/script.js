@@ -129,6 +129,20 @@ function bindChatHandler() {
     }
 }
 
+function ensureConversation() {
+    let conv = localStorage.getItem('conversation_id');
+    if (conv) return Promise.resolve(conv);
+    return fetch('/api/conversations', { method: 'POST' })
+        .then(r => r.json())
+        .then(j => {
+            if (j.conversation_id) {
+                localStorage.setItem('conversation_id', j.conversation_id);
+                return j.conversation_id;
+            }
+            throw new Error('Failed to create conversation');
+        });
+}
+
 function sendMessage(e) {
     e.preventDefault();
     var input = document.getElementById('chatInput');
@@ -149,11 +163,14 @@ function sendMessage(e) {
     replyDiv.className = 'chat-msg bot';
     messages.appendChild(replyDiv);
 
-    // POST to backend (Flask endpoint)
-    fetch('/api/chat', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({message: text})
+    ensureConversation()
+    .then(conv_id => {
+        // POST to backend (Flask endpoint) with conversation id
+        return fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: text, conversation_id: conv_id})
+        });
     })
     .then(resp => {
         if (!resp.body) throw new Error('No response body');
@@ -198,6 +215,8 @@ function sendMessage(e) {
 window.onload = function() {
     document.getElementById('sidebar').classList.remove('visible');
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
+    // ensure a conversation id exists for this session
+    ensureConversation().catch(()=>{});
     // Set the initial landing page 
     setActive(START_SCREEN || 'modelhub');
 };
