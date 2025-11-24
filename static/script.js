@@ -151,21 +151,24 @@ function sendMessage(e) {
     var text = input.value.trim();
     if (text === '') return;
 
-    // USER message right
+    // USER message (render markdown safely)
     var msgDiv = document.createElement('div');
-    msgDiv.textContent = text;
     msgDiv.className = 'chat-msg user';
+    if (window.marked && window.DOMPurify) {
+        msgDiv.innerHTML = DOMPurify.sanitize(marked.parse(text));
+    } else {
+        msgDiv.textContent = text;
+    }
     messages.appendChild(msgDiv);
 
     // Model reply placeholder
     var replyDiv = document.createElement('div');
-    replyDiv.textContent = '';
     replyDiv.className = 'chat-msg bot';
+    replyDiv.innerHTML = '';
     messages.appendChild(replyDiv);
 
     ensureConversation()
     .then(conv_id => {
-        // POST to backend (Flask endpoint) with conversation id
         return fetch('/api/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -175,7 +178,8 @@ function sendMessage(e) {
     .then(resp => {
         if (!resp.body) throw new Error('No response body');
         const reader = resp.body.getReader();
-        let decoder = new TextDecoder();
+        const decoder = new TextDecoder();
+        let accumulated = "";
 
         function readChunk() {
             return reader.read().then(({ done, value }) => {
@@ -183,17 +187,23 @@ function sendMessage(e) {
                     messages.scrollTop = messages.scrollHeight;
                     return;
                 }
-                let chunkText = decoder.decode(value, {stream: true});
+                let chunkText = decoder.decode(value, { stream: true });
+                // server yields lines of JSON per chunk; split and parse each
                 chunkText.split('\n').forEach(line => {
                     if (!line.trim()) return;
                     try {
                         let data = JSON.parse(line);
                         if (data.reply) {
-                            replyDiv.textContent += data.reply;
+                            accumulated += data.reply;
+                            if (window.marked && window.DOMPurify) {
+                                replyDiv.innerHTML = DOMPurify.sanitize(marked.parse(accumulated));
+                            } else {
+                                replyDiv.textContent = accumulated;
+                            }
                             messages.scrollTop = messages.scrollHeight;
                         }
                     } catch (e) {
-                        // Ignore parse errors
+                        // ignore non-JSON partial fragments
                     }
                 });
                 return readChunk();

@@ -133,6 +133,58 @@ body {
     border-radius: 6px;
 }
 
+.chat-msg pre {
+    background: #071025;
+    color: #d9eefb;
+    padding: 12px;
+    border-radius: 6px;
+    overflow: auto;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+    font-size: 0.92em;
+    margin: 8px 0;
+}
+
+.chat-msg code {
+    background: rgba(0,0,0,0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+    font-size: 0.95em;
+}
+.chat-msg h1, .chat-msg h2, .chat-msg h3 {
+    margin: 8px 0;
+    color: inherit;
+}
+.chat-msg p { margin: 6px 0; line-height: 1.45; }
+.chat-msg a { color: #1e6fff; text-decoration: underline; }
+.chat-msg img { max-width: 100%; border-radius: 6px; margin: 6px 0; }
+.chat-msg ul, .chat-msg ol {
+    margin: 6px 0 6px 18px;
+}
+.chat-msg blockquote {
+    border-left: 3px solid rgba(0,0,0,0.08);
+    margin: 6px 0;
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 4px;
+}
+.chat-msg table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0;
+}
+.chat-msg table th,
+.chat-msg table td {
+    border: 1px solid #e3e8ef;
+    padding: 6px 10px;
+    text-align: left;
+    font-size: 0.95em;
+}
+
+/* Slightly different contrast for bot vs user code blocks */
+.chat-msg.bot pre { background:#071025; color:#d9eefb; }
+.chat-msg.user pre { background:#f3f7ff; color:#0b2340; }
+
 .chat-msg.user {
     background: #e3eaf7;
     color: #243c4a;
