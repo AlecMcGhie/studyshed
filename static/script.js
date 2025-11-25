@@ -366,7 +366,7 @@ function bindModelPopup() {
 function updateActiveModelDisplay(modelName) {
     let titleBar = document.getElementById('titleBar');
     if (titleBar) {
-        titleBar.innerHTML = `Chat <span style="font-size:0.69em;color:#7B8DAB;padding-left:8px;">(${modelName})</span>`;
+        titleBar.innerHTML = `Chatting with:  <span style="font-size:0.69em;color:#FFFFFF;padding-left:8px;">(${modelName})</span>`;
     }
 }
 
