@@ -4,7 +4,7 @@ Testing the dev branch
 # Quickstart guide
 
 ## Pre-req
-You must already have ollama installed and running on your local machine. You can download it at this link (Ollama download)[http://ollama.com/download] .
+You must already have ollama installed and running on your local machine. You can download it at this link [Ollama download](http://ollama.com/download) .
 ## Step one: clone and locate
 ```
 git clone https://github.com/AlecMcGhie/studyshed
