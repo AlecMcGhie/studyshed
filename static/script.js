@@ -71,6 +71,7 @@ function loadChatUI() {
 
     document.getElementById('chatForm').addEventListener('submit', sendMessage);
     document.getElementById('newConvBtn').addEventListener('click', createNewConversation);
+    setModelIndicator();
     bindModelPopup();
     fetchAndRenderConversations();
 
