@@ -1,2 +1,20 @@
+# Ignore Mac system files
 .DS_Store
 .github/.DS_Store
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment directories
+venv/
+env/
+.venv/
+.env/
+
+# Ignore database files
+/data/
+/data/*.db
+/data/*.sqlite3

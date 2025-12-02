@@ -1,3 +1,6 @@
+// Selected start page
+const START_SCREEN = 'chat'; // Options: 'chat', 'flashcards', 'podcast', 'calendar', 'modelhub'
+
 function openSidebar() {
     document.getElementById('sidebar').classList.add('visible');
     document.getElementById('openSidebarBtn').classList.add('hide-toggle-btn');
@@ -39,18 +42,52 @@ function setActive(feature) {
     closeSidebar()
 }
 
+let activeConversationId = null;
+
+// render basic chat UI with conversation list
 function loadChatUI() {
-    document.getElementById('titleBar').innerText = "Chat";
-    document.getElementById('mainContent').innerHTML = `
-        <div id="chatBox">
+    const main = document.getElementById('mainContent');
+    main.innerHTML = `
+      <div id="chatLayout" style="display:flex;gap:16px;">
+        <aside id="convList" style="width:260px;"></aside>
+        <section style="flex:1;">
+          <div id="chatBox">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div><strong>Conversations</strong></div>
+              <div>
+                <button id="newConvBtn">New</button>
+                <button id="openModelPopup">Model</button>
+              </div>
+            </div>
             <div id="chatMessages"></div>
-            <form id="chatForm" onsubmit="sendMessage(event)" style="display:flex;gap:8px;">
-                <input id="chatInput" type="text" placeholder="Ask your question..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd4df;">
-                <button type="submit" style="padding:9px 22px;background:#4A90E2;border:none;color:white;border-radius:6px;font-size:1em;">Send</button>
+            <form id="chatForm" style="display:flex;margin-top:10px;gap:8px;align-items:flex-end;">
+              <textarea id="chatInput" rows="3" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;resize:vertical" placeholder="Type a message"></textarea>
+              <button id="sendBtn" type="submit" style="padding:8px 12px;border-radius:6px;">Send</button>
             </form>
-        </div>
+          </div>
+        </section>
+      </div>
     `;
-    bindChatHandler();
+
+    document.getElementById('chatForm').addEventListener('submit', sendMessage);
+    document.getElementById('newConvBtn').addEventListener('click', createNewConversation);
+    setModelIndicator();
+    bindModelPopup();
+    fetchAndRenderConversations();
+
+    // Enter = send, Shift+Enter = newline
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                // requestSubmit triggers the form 'submit' event so sendMessage runs
+                const form = document.getElementById('chatForm');
+                if (form.requestSubmit) form.requestSubmit();
+                else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        });
+    }
 }
 
 function loadFlashcardsUI() {
@@ -111,6 +148,20 @@ function bindChatHandler() {
     }
 }
 
+function ensureConversation() {
+    let conv = localStorage.getItem('conversation_id');
+    if (conv) return Promise.resolve(conv);
+    return fetch('/api/conversations', { method: 'POST' })
+        .then(r => r.json())
+        .then(j => {
+            if (j.conversation_id) {
+                localStorage.setItem('conversation_id', j.conversation_id);
+                return j.conversation_id;
+            }
+            throw new Error('Failed to create conversation');
+        });
+}
+
 function sendMessage(e) {
     e.preventDefault();
     var input = document.getElementById('chatInput');
@@ -119,28 +170,35 @@ function sendMessage(e) {
     var text = input.value.trim();
     if (text === '') return;
 
-    // USER message right
+    // USER message (render markdown safely)
     var msgDiv = document.createElement('div');
-    msgDiv.textContent = text;
     msgDiv.className = 'chat-msg user';
+    if (window.marked && window.DOMPurify) {
+        msgDiv.innerHTML = DOMPurify.sanitize(marked.parse(text));
+    } else {
+        msgDiv.textContent = text;
+    }
     messages.appendChild(msgDiv);
 
     // Model reply placeholder
     var replyDiv = document.createElement('div');
-    replyDiv.textContent = '';
     replyDiv.className = 'chat-msg bot';
+    replyDiv.innerHTML = '';
     messages.appendChild(replyDiv);
 
-    // POST to backend (Flask endpoint)
-    fetch('/api/chat', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({message: text})
+    ensureConversation()
+    .then(conv_id => {
+        return fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: text, conversation_id: conv_id})
+        });
     })
     .then(resp => {
         if (!resp.body) throw new Error('No response body');
         const reader = resp.body.getReader();
-        let decoder = new TextDecoder();
+        const decoder = new TextDecoder();
+        let accumulated = "";
 
         function readChunk() {
             return reader.read().then(({ done, value }) => {
@@ -148,17 +206,23 @@ function sendMessage(e) {
                     messages.scrollTop = messages.scrollHeight;
                     return;
                 }
-                let chunkText = decoder.decode(value, {stream: true});
+                let chunkText = decoder.decode(value, { stream: true });
+                // server yields lines of JSON per chunk; split and parse each
                 chunkText.split('\n').forEach(line => {
                     if (!line.trim()) return;
                     try {
                         let data = JSON.parse(line);
                         if (data.reply) {
-                            replyDiv.textContent += data.reply;
+                            accumulated += data.reply;
+                            if (window.marked && window.DOMPurify) {
+                                replyDiv.innerHTML = DOMPurify.sanitize(marked.parse(accumulated));
+                            } else {
+                                replyDiv.textContent = accumulated;
+                            }
                             messages.scrollTop = messages.scrollHeight;
                         }
                     } catch (e) {
-                        // Ignore parse errors
+                        // ignore non-JSON partial fragments
                     }
                 });
                 return readChunk();
@@ -176,11 +240,159 @@ function sendMessage(e) {
     messages.scrollTop = messages.scrollHeight;
 }
 
+
+
+function fetchAndRenderConversations() {
+    fetch('/api/conversations')
+        .then(r => r.json())
+        .then(data => {
+            const listEl = document.getElementById('convList');
+            listEl.innerHTML = '';
+            const ul = document.createElement('ul');
+            ul.style.listStyle='none';
+            ul.style.padding='0';
+            (data.conversations || []).forEach(conv => {
+                const li = document.createElement('li');
+                li.style.padding = '8px';
+                li.style.borderBottom = '1px solid #eee';
+                li.style.cursor = 'pointer';
+                li.textContent = new Date(conv.created_at).toLocaleString();
+                li.dataset.id = conv.id;
+                li.onclick = () => { loadConversation(conv.id); };
+                ul.appendChild(li);
+            });
+            listEl.appendChild(ul);
+
+            // if no active conversation, auto-create or load the first
+            if (!activeConversationId && data.conversations && data.conversations.length) {
+                loadConversation(data.conversations[0].id);
+            }
+        })
+        .catch(() => {});
+}
+
+function createNewConversation() {
+    fetch('/api/conversations', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            activeConversationId = data.conversation_id;
+            fetchAndRenderConversations();
+            clearMessages();
+        })
+        .catch(() => {});
+}
+
+function clearMessages() {
+    const messages = document.getElementById('chatMessages');
+    if (messages) messages.innerHTML = '';
+}
+
+function loadConversation(convId) {
+    activeConversationId = convId;
+    fetch(`/api/conversations/${convId}`)
+        .then(r => r.json())
+        .then(data => {
+            const messages = document.getElementById('chatMessages');
+            messages.innerHTML = '';
+            (data.messages || []).forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'chat-msg ' + (m.role === 'user' ? 'user' : 'bot');
+                if (window.marked && window.DOMPurify) {
+                    div.innerHTML = DOMPurify.sanitize(marked.parse(m.content || ''));
+                } else {
+                    div.textContent = m.content || '';
+                }
+                messages.appendChild(div);
+            });
+            messages.scrollTop = messages.scrollHeight;
+        })
+        .catch(() => {});
+}
+
+// ensureConversation updated to prefer activeConversationId
+function ensureConversation() {
+    if (activeConversationId) return Promise.resolve(activeConversationId);
+    return fetch('/api/conversations', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            activeConversationId = data.conversation_id;
+            fetchAndRenderConversations();
+            return activeConversationId;
+        });
+}
+
+let selectedModel = null;
+
+// Model selection handler for popup
+function bindModelPopup() {
+    const openBtn = document.getElementById('openModelPopup');
+    if (!openBtn) return;
+    openBtn.onclick = function() {
+        fetch('/api/models')
+            .then(resp => resp.json())
+            .then(data => {
+                const models = data.models || [];
+                const list = document.getElementById('modelList');
+                if (!list) return;
+                list.innerHTML = '';
+                models.forEach(model => {
+                    const li = document.createElement('li');
+                    li.textContent = model.name || 'Unknown';
+                    if (model.active) li.classList.add('selected');
+                    li.onclick = () => {
+                        selectedModel = model.name;
+                        // visually mark selection
+                        Array.from(list.children).forEach(c => c.classList.remove('selected'));
+                        li.classList.add('selected');
+                        // set active immediately (optional)
+                        fetch('/api/set_active_model', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({model_name: selectedModel})
+                        }).then(()=> {
+                            setModelIndicator();
+                            document.getElementById('modelModal').style.display = 'none';
+                        });
+                    };
+                    list.appendChild(li);
+                });
+                document.getElementById('modelModal').style.display = 'flex';
+            });
+    };
+    const closeBtn = document.getElementById('closeModelModal');
+    if (closeBtn) closeBtn.onclick = () => { document.getElementById('modelModal').style.display = 'none'; };
+}
+
+// Show current model in chat UI
+function updateActiveModelDisplay(modelName) {
+    let titleBar = document.getElementById('titleBar');
+    if (titleBar) {
+        titleBar.innerHTML = `Chatting with:  <span style="font-size:0.69em;color:#FFFFFF;padding-left:8px;">(${modelName})</span>`;
+    }
+}
+
+function setModelIndicator() {
+    fetch('/api/models')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.models) {
+                const active = data.models.find(m => m.active);
+                const name = active ? active.name : '(none)';
+                const el = document.getElementById('currentModelName');
+                if (el) el.textContent = name;
+                updateActiveModelDisplay(name);
+            }
+        })
+        .catch(()=>{});
+}
 // Load Chat UI by default on page load
 window.onload = function() {
     document.getElementById('sidebar').classList.remove('visible');
     document.getElementById('openSidebarBtn').classList.remove('hide-toggle-btn');
+    // ensure a conversation id exists for this session
+    ensureConversation().catch(()=>{});
     // Set the initial landing page 
-    setActive('modelhub');
-    // git check
+    setActive(START_SCREEN || 'modelhub');
+    loadChatUI();
+    setModelIndicator();
 };
